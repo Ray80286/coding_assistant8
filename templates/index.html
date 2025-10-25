@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주식 관리 프로그램</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://bootswatch.com/5/litera/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+      <div class="container">
+        <a class="navbar-brand" href="{{ url_for('index') }}">홈</a>
+      </div>
+    </nav>
+    <div class="container mt-5">
+        <h1 class="mb-4">주식 목록</h1>
+
+        <!-- 검색 및 컨트롤 폼 -->
+        <div class="row mb-3 align-items-center">
+            <div class="col-md-8 d-flex">
+                <!-- 검색 폼 -->
+                <form action="{{ url_for('index') }}" method="get" class="d-flex">
+                    <input type="text" name="search" class="form-control me-2" placeholder="회사명 또는 종목코드" value="{{ search_query }}">
+                    <button type="submit" class="btn btn-outline-secondary">검색</button>
+                </form>
+                
+                <!-- 페이지당 항목 수 폼 -->
+                <form action="{{ url_for('index') }}" method="get" class="d-flex ms-3">
+                    <input type="hidden" name="search" value="{{ search_query }}">
+                    <input type="hidden" name="sort_by" value="{{ sort_by }}">
+                    <input type="hidden" name="order" value="{{ order }}">
+                    <select name="per_page" class="form-select" onchange="this.form.submit()" style="width: auto;">
+                        <option value="10" {% if per_page == 10 %}selected{% endif %}>10개씩 보기</option>
+                        <option value="20" {% if per_page == 20 %}selected{% endif %}>20개씩 보기</option>
+                        <option value="50" {% if per_page == 50 %}selected{% endif %}>50개씩 보기</option>
+                    </select>
+                </form>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{{ url_for('add_stock_form') }}" class="btn btn-primary">신규 종목 추가</a>
+            </div>
+        </div>
+
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th><a href="{{ url_for('index', sort_by='종목코드', order=next_order, search=search_query, per_page=per_page) }}">종목코드 {% if sort_by == '종목코드' %}{% if order == 'asc' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
+                    <th><a href="{{ url_for('index', sort_by='회사명', order=next_order, search=search_query, per_page=per_page) }}">회사명 {% if sort_by == '회사명' %}{% if order == 'asc' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
+                    <th><a href="{{ url_for('index', sort_by='현재가', order=next_order, search=search_query, per_page=per_page) }}">현재가 {% if sort_by == '현재가' %}{% if order == 'asc' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
+                    <th><a href="{{ url_for('index', sort_by='거래량', order=next_order, search=search_query, per_page=per_page) }}">거래량 {% if sort_by == '거래량' %}{% if order == 'asc' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
+                    <th><a href="{{ url_for('index', sort_by='예측', order=next_order, search=search_query, per_page=per_page) }}">예측 {% if sort_by == '예측' %}{% if order == 'asc' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
+                    <th>관리</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for stock in stocks %}
+                <tr>
+                    <td>{{ stock['종목코드'] }}</td>
+                    <td>{{ stock['회사명'] }}</td>
+                    <td>{{ stock['현재가'] }}</td>
+                    <td>{{ stock['거래량'] }}</td>
+                    <td>
+                        {% if stock['예측'] == 1 %}
+                            <span style="color: red;">{{ stock['예측'] }}</span>
+                        {% elif stock['예측'] == 0 %}
+                            <span style="color: green;">{{ stock['예측'] }}</span>
+                        {% elif stock['예측'] == -1 %}
+                            <span style="color: blue;">{{ stock['예측'] }}</span>
+                        {% else %}
+                            {{ stock['예측'] }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('edit_stock_form', stock_code=stock['종목코드']) }}" class="btn btn-secondary btn-sm">수정</a>
+                        <form action="{{ url_for('delete_stock', stock_code=stock['종목코드']) }}" method="post" style="display:inline;">
+                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('정말로 이 항목을 삭제하시겠습니까?');">삭제</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center">표시할 데이터가 없습니다.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- 페이지네이션 -->
+        {% if total_pages > 1 %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                <!-- Previous Page -->
+                <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('index', page=page-1, sort_by=sort_by, order=order, search=search_query, per_page=per_page) }}">이전</a>
+                </li>
+                <!-- Page Numbers -->
+                {% for p in range(1, total_pages + 1) %}
+                <li class="page-item {% if p == page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('index', page=p, sort_by=sort_by, order=order, search=search_query, per_page=per_page) }}">{{ p }}</a>
+                </li>
+                {% endfor %}
+                <!-- Next Page -->
+                <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('index', page=page+1, sort_by=sort_by, order=order, search=search_query, per_page=per_page) }}">다음</a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
+
+    </div>
+</body>
+</html>

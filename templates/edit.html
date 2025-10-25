@@ -1,0 +1,67 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>종목 수정</title>
+    <link href="https://bootswatch.com/5/litera/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+      <div class="container">
+        <a class="navbar-brand" href="{{ url_for('index') }}">홈</a>
+      </div>
+    </nav>
+    <div class="container mt-5">
+        <h1 class="mb-4">종목 수정</h1>
+        <form action="{{ url_for('update_stock', stock_code=stock['종목코드']) }}" method="post">
+            <div class="mb-3">
+                <label for="code" class="form-label">종목코드</label>
+                <input type="text" class="form-control" id="code" name="code" value="{{ stock['종목코드'] }}" readonly>
+            </div>
+            <div class="mb-3">
+                <label for="name" class="form-label">회사명</label>
+                <input type="text" class="form-control" id="name" name="name" value="{{ stock['회사명'] }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="price" class="form-label">현재가</label>
+                <input type="number" class="form-control" id="price" name="price" value="{{ stock['현재가'] }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="volume" class="form-label">거래량</label>
+                <input type="number" class="form-control" id="volume" name="volume" value="{{ stock['거래량'] }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="prediction" class="form-label">예측</label>
+                <select class="form-select" id="prediction" name="prediction">
+                    <option value="1" style="color: red;" {% if stock['예측'] == 1 %}selected{% endif %}>1</option>
+                    <option value="0" style="color: green;" {% if stock['예측'] == 0 %}selected{% endif %}>0</option>
+                    <option value="-1" style="color: blue;" {% if stock['예측'] == -1 %}selected{% endif %}>-1</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">수정 완료</button>
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">취소</a>
+        </form>
+    </div>
+
+    <script>
+        const predictionSelect = document.getElementById('prediction');
+        const colorMap = {
+            '1': 'red',
+            '0': 'green',
+            '-1': 'blue'
+        };
+
+        function updateColor() {
+            const selectedValue = predictionSelect.value;
+            predictionSelect.style.color = colorMap[selectedValue] || 'black';
+        }
+
+        predictionSelect.addEventListener('change', updateColor);
+        
+        // Set initial color
+        updateColor();
+    </script>
+</body>
+</html>
